@@ -3,24 +3,21 @@
 /*
 SoundFunction
 Daniel
-Mar 7, 2014
+Mar 11, 2014
 
 Loud Sound (>???)
-Hit spacebar
+Hit spacebar and returns 1
 
 Soft Sound (<???)
-Hit enter key
+Hit enter key and returns 0
+
+function gets passed into the main function
 */
 
 #define MICROPHONE 2
 #define SOUNDTRESH 65
 #define AMBIENT 25
 int listen();
-
-task main()
-{
-	
-}
 
 int listen()
 {
