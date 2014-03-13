@@ -33,7 +33,7 @@ task main()
     SensorType[LBUMP]=sensorTouch; //left
     
     //Define the light sensor type on port S2
-    SensorType[LIGHT]=sensorLightActive; /
+    SensorType[LIGHT]=sensorLightActive;
     
     //Sound
     SensorType[MICROPHONE]=sensorSoundDBA;
