@@ -1,14 +1,10 @@
 //Daniel Kao
-//Mar 11, 2014
-//On Screen Function
+//Mar 13, 2014
+//On Screen Function v2
 /*
-
+No main function because these functions are included into the run file
 
 */
-
-
-#define ROWS 7	//roughly proportional to full screen
-#define COLS 10
 
 #define MAXHEIGHT 64
 #define MAXWIDTH 100
@@ -18,38 +14,38 @@
 #define LEFT 30 //horizontal screen position at left edge of image
 #define TOP 40 //vertical screen position at top edge of image
 
-void displayScreen (int, int);
-void displaySmiley;
-void clearScreen;
-void expand (int, int, int, int);
+void displayScreen (int spaceCount, int enterCount); //displays the number of spaces and enters that have been used
+void clearScreen;		//clears the screen on call
+void displaySmiley;		//displays a smiley somewhere random
+
+void expand (int size, int clear, int initX, int initY)	//expands the selected pixel to a square of lengths /size
 
 
 
-task main (){
-	int spaceCount=5;
-	int enterCount=3;
-	
-}
-
-void displayScreen (int spaceCount, int enterCount){
+void displayScreen (int spaceCount, int enterCount){		
 	nxtDisplayTextLine (2, "Number of Spaces: %d", spaceCount);
 	nxtDisplayTextLine (3, "Number of Enters: %d", enterCount);
 	
 }
 
-void clearScreen{
+void clearScreen{		//clears the screen on call
 	int i;
 	for (i=0; i<MAXLINES;i++){
 		nxtDisplayClearTextLine(i);
 	}
 }
 
-void displaySmiley{
+void displaySmiley{		//displays a smiley somewhere random
 	int i, j; //row and column
 	int x, y; //screen x and y coordinates
 	int a,b; //start coordinates of the smiley	
 	int rows, cols;
 	int upsize;
+	
+	rows=7;		//these widths and heights are roughly the dimension of the screen
+	cols=10;
+	upsize=4;	//expands the pixel from 1 pixel to a square of 4x4 pixels
+	
 	byte image[ROWS][COLS]=
 			{	{1,1,1,0,0,0,0,1,1,1},
 				{1,1,0,0,0,0,0,0,1,1},
@@ -59,7 +55,8 @@ void displaySmiley{
 				{1,1,0,0,1,1,0,0,1,1},
 				{1,1,1,0,0,0,0,1,1,1},
 			};
-	a=random(MAXWIDTH-(cols*upsize));
+			
+	a=random(MAXWIDTH-(cols*upsize));	//places the smiley at a random spot
 	b=random(MAXHEIGHT-(rows*upsize))+(rows*upsize);
 	
 	for(i=0; i<=rows-1; i++)
@@ -68,22 +65,19 @@ void displaySmiley{
 		{
 			x = a+j*upsize; //set x screen position according to the column value
 			y = b-i*upsize; //set y screen position according to the row value
-			if(image[i][j] == 1)
-			{
+			
+			if(image[i][j] == 1)	//these pixels are empty
 				expand (upsize,1,x,y);
-			}
-			else if(image[i][j] == 0)
-			{
+			else if(image[i][j] == 0)	//these pixels are filled
 				expand (upsize,0,x,y);
-			}
 			
 		}
 		wait10Msec(20);
 	}
-	wait10Msec(200);//delay end of program so we can image on the screen
+	//wait10Msec(200);//delay end of program so we can image on the screen
 }
 			
-void expand (int size, int clear, int initX, int initY)
+void expand (int size, int clear, int initX, int initY)	//expands the selected pixel to a square of lengths /size
 {
 	int i;
 	int j;
