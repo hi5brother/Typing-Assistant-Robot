@@ -7,26 +7,9 @@ Colour 1 (Left Edge): Turns right towards keyboard and space bar
 Colour 2 (Right Edge): Turns left towards keyboard and enter
 Colour 3 (Front Edge): If loud, back up then go left to colour 1. If soft, back up then go right to colour 2.
 Colour 4 (Back Edge): If loud, back up then go right to colour 1. If soft, back up then go left to colour 2.
-
 */
 
-
-#define COLOUR1 25
-#define COLOUR2 50
-#define COLOUR3 75
-#define COLOUR4 100
-#define SPEED 50
-
-
-int LightSensor(int);
-
-task main(){
-
-}
-
-
 int LightSensor(int sound){
-  int LeftMotor, RightMotor;
   int direction;
   int light; //current sensor light level
   
@@ -34,8 +17,8 @@ int LightSensor(int sound){
   nMotorPIDSpeedCtrl[LeftMotor]=mtrSpeedReg;
   nMotorPIDSpeedCtrl[RightMotor]=mtrSpeedReg;
   
-  motor[LeftMotor]=SPEED;
-  motor[RightMotor]=SPEED;
+  motor[1]=SPEED;
+  motor[2]=SPEED;
   
   while(true){
       level=SensorValue[1]; //get the new light sensor value
