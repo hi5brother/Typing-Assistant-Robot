@@ -21,31 +21,35 @@ Colour 4 (Back Edge): If loud, back up then go right to colour 1. If soft, back 
 int LightSensor(int);
 
 task main(){
+
 }
 
 
 int LightSensor(int sound){
   int LeftMotor, RightMotor;
   int direction;
+  int light; //current sensor light level
   
+  SensorType[1]=sensorLightActive; //define the light sensor type on port S2
   nMotorPIDSpeedCtrl[LeftMotor]=mtrSpeedReg;
   nMotorPIDSpeedCtrl[RightMotor]=mtrSpeedReg;
   
+  motor[LeftMotor]=SPEED;
+  motor[RightMotor]=SPEED;
+  
   while(true){
-      motor[LeftMotor]=SPEED;
-      motor[RightMotor]=SPEED;
-      
-      if (SensorValue(lightSensor) < COLOUR1){
+      level=SensorValue[1]; //get the new light sensor value
+      if (light < COLOUR1){
           //Turn right
           direction=0;
           break;
           }
-      else if  (SensorValue(lightSensor) > COLOUR1 && SensorValue(lightSensor) < COLOUR2){
+      else if  (light > COLOUR1 && light < COLOUR2){
           //Turn Left
           direction=1;
           break;
           }
-      else if (SensorValue(lightSensor) > COLOUR2 && SensorValue(lightSensor) < COLOUR3){
+      else if (light > COLOUR2 && light < COLOUR3){
           if (sound==1){
               //Backup a bit
               //Turn Left
@@ -55,7 +59,7 @@ int LightSensor(int sound){
               //Turn Right
               }
           }
-      else if (SensorValuelightSensor) > COLOUR3 && SensorValue(lightSensor) < COLOUR4){
+      else if (light > COLOUR3 && light < COLOUR4){
           if (sound==1){
               //Backup a bit
               //Turn Right
