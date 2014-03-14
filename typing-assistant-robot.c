@@ -70,7 +70,7 @@ int lightSensor(int sound);
 task main()
 {
     int sound,direction;
-    int spaceCount, enterCount, consecEnter;
+    int spaceCount, enterCount, consecEnter=0;
     
     //Initialize Motors and Sensors
     nMotorPIDSpeedCtrl[RMOTOR]=mtrSpeedReg;
@@ -80,7 +80,7 @@ task main()
     SensorType[LIGHT]=sensorLightActive;
     SensorType[MICROPHONE]=sensorSoundDBA;
 
-    while(true){
+    while(consecEnter!=2){
     	sound=listen();
    		nxtDisplayBigTextLine(4,"HI");
     	direction=lightSensor(sound);
@@ -88,9 +88,6 @@ task main()
     	displayScreen(spaceCount,enterCount);
     	clearScreen();
     	displaySmiley();
-    	
-    	if (consecEnter==2)
-    		break;
   }
 }
 
