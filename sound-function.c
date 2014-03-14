@@ -15,7 +15,7 @@ function gets passed into the main function
 */
 
 #define MICROPHONE 2
-#define SOUNDTRESH 65
+#define SOUNDTHRESH 65
 #define AMBIENT 25
 int listen();
 
@@ -34,7 +34,7 @@ int listen()
 		if (dBlevel>SOUNDTHRESH)	//returns a 1 if the sound is above 65 dB (SOUNDTHRESH)
 			return 1;
 		else if (dBlevel>AMBIENT)		//only returns something if sound is above the ambient room noise
-			return 0;w
+			return 0;
 	}
 }
 

@@ -5,29 +5,35 @@
 /*
 Either Bumper: Record that a character has been input. Move away from the keyboard.
 Two Consecutive Enter Commands: Terminate program.
-Or two consecutive bumps or something
 */
 
+#define RBUMP 0
+#define LBUMP 3
+#define LIGHT 1
+#define MICROPHONE 2
+#define SPEED 25
+
 //Pass the direction from LightSensor into TouchSensor and have it return spaceCount and enterCount values to be displayed on the screen
-void TouchSensor(int direction, int &spaceCount, int &enterCount){
+void TouchSensor(int direction, int &spaceCount, int &enterCount, int &consecEnter){
     int spaceCount,enterCount;
     int leftBump, rightBump;
+    int consecEnter=0;
     
     //Initialize Sensors
-    leftBump=SensorValue[0];
-    rightBump=SensorValue[3];
+    leftBump=SensorValue[LBUMP];
+    rightBump=SensorValue[RBUMP];
     
     if (leftBump==1 || rightBump==1){
         if (direction==0){
             spaceCount+=1;
+            consecEnter=0;
             }
         else if (direction==1){
             enterCount+=1;
+            consecEnter++
             }
         }
         //Back away from the keyboard
         BackUp(SPEED,2000);
-        
     }
 }
-    //Figure out how to time for two consecutive bumps or how to count two consec enters
