@@ -3,67 +3,62 @@
 //March 2014
 
 /*
-#include "sound-function.c"
-#include "on-screen-function.c"
-#include "TouchSensor.c"
-#include "LightSensor.c"
-//#include "BackUp.c"
-#include "Rotate.c"
-#include "line-follow.c"
+This robot does something reall cool/useful/fun...
 */
 
+//Define robot sensor port values
 #define RMOTOR 1
 #define LMOTOR 2
 #define RBUMP 0
-#define LBUMP 3
+#define LBUMP 2
 #define LIGHT 1
 #define MICROPHONE 3
+#define BULB 0
 
-// /* Other Definitions
+//Define light thresholds for the different boundaries
 #define COLOUR1 25
 #define COLOUR2 50
 #define COLOUR3 75
 #define COLOUR4 100
 
-#define SPEED 50
+//Define speeds
+#define DRIVESPEED 50
+#define BACKSPEED 25
 #define ZIGSPEED 20
 #define ZIGZAG 10
 #define MAX 64
 
-#define ROTATESCALE 2.06 //found from trial and error
-#define EARLYSTOPFACTOR 0.30 //stop earlier to account for inertia
+//Define rotation values for robot
+#define ROTATESCALE 2.06		//found from trial and error
+#define EARLYSTOPFACTOR 0.30		//stop earlier to account for inertia
 
-
+//Define smiley face parameters
 #define ROWS 7
 #define COLS 10
-
 #define MAXHEIGHT 64
 #define MAXWIDTH 100
-
 #define MAXLINES 10
+#define UPSIZE 4		//expands the pixel from 1 pixel to a square of 4x4 pixels
+#define LEFT 30		//horizontal screen position at left edge of image
+#define TOP 40		//vertical screen position at top edge of image
 
-#define UPSIZE 4 //expands the pixel from 1 pixel to a square of 4x4 pixels
-
-#define LEFT 30 //horizontal screen position at left edge of image
-#define TOP 40 //vertical screen position at top edge of image
-
+//Define sound parameters
 #define SOUNDTHRESH 65
 #define AMBIENT 25
 
-#define BACKSPEED 25
+//Define back up noises
 #define DURATION 2000
 #define TONE 1100
 
-#define DRIVESPEED 50
 
-
+//Define function prototypes
 //typedef int rangeArray [MAX];		//gives a range of +/- 5 light values around the target level
 void zigrotate (int speed, int degrees);
 void followLine(int direction, int &bump);
-void displayScreen (int spaceCount, int enterCount); //displays the number of spaces and enters that have been used
+void displayScreen (int spaceCount, int enterCount);		//displays the number of spaces and enters that have been used
 void clearScreen();		//clears the screen on call
 void displaySmiley();		//displays a smiley somewhere random
-void expand (int size, int clear, int initX, int initY);	//expands the selected pixel to a square of lengths /size
+void expand (int size, int clear, int initX, int initY);		//expands the selected pixel to a square of lengths /size
 void rotate(int speed, int degrees);
 int listen();
 void touchSensor(int direction, int &spaceCount, int &enterCount, int &consecEnter);
@@ -76,18 +71,13 @@ task main()
 {
     int sound,direction;
     int spaceCount, enterCount, consecEnter;
-    //Turn on speed regulation for accurate tracking
+    
+    //Initialize Motors and Sensors
     nMotorPIDSpeedCtrl[RMOTOR]=mtrSpeedReg;
     nMotorPIDSpeedCtrl[LMOTOR]=mtrSpeedReg;
-
-    //Turn on touch sensors for bumpers
-    SensorType[RBUMP]=sensorTouch; //right
-    SensorType[LBUMP]=sensorTouch; //left
-
-    //Define the light sensor type on port S2
+    SensorType[RBUMP]=sensorTouch;
+    SensorType[LBUMP]=sensorTouch;
     SensorType[LIGHT]=sensorLightActive;
-
-    //Sound
     SensorType[MICROPHONE]=sensorSoundDBA;
 
     while(true){
@@ -98,10 +88,14 @@ task main()
     	displayScreen(spaceCount,enterCount);
     	clearScreen();
     	displaySmiley();
+    	
+    	if (consecEnter==2)
+    		break;
   }
 }
 
-void followLine (int direction, int&bump) {
+
+void followLine (int direction, int&bump){
 	int i;
 	int light;
 	int lightTarget;		//value of the colour that the bot is suppose to follow
@@ -118,8 +112,6 @@ void followLine (int direction, int&bump) {
 	for (i=0;i<=10;i++){
 		colourRange[i]=lightTarget-10/2+i;	//sets the colour range to +/- 5 of the target light
 	}
-
-
 	SensorType[LIGHT]=sensorLightActive;
 	nMotorPIDSpeedCtrl[LMOTOR]=mtrSpeedReg;
 	nMotorPIDSpeedCtrl[RMOTOR]=mtrSpeedReg;
@@ -151,10 +143,9 @@ void followLine (int direction, int&bump) {
 		}
 
 		//touch sensor check
-
-
 }
 }
+
 
 void zigrotate(int speed, int degrees){
 	int neededCount, actualCount;
@@ -182,19 +173,16 @@ void zigrotate(int speed, int degrees){
         else
             actualCount=nMotorEncoder[LMOTOR];
         }
-
     motor[RMOTOR]=0;
     motor[LMOTOR]=0;
-
-
-
 }
+
 
 void displayScreen (int spaceCount, int enterCount){
 	nxtDisplayTextLine (2, "Number of Spaces: %d", spaceCount);
 	nxtDisplayTextLine (3, "Number of Enters: %d", enterCount);
-
 }
+
 
 void clearScreen(){		//clears the screen on call
 	int i;
@@ -202,6 +190,7 @@ void clearScreen(){		//clears the screen on call
 		nxtDisplayClearTextLine(i);
 	}
 }
+
 
 void displaySmiley(){		//displays a smiley somewhere random
 	int i, j; //row and column
@@ -232,7 +221,6 @@ void displaySmiley(){		//displays a smiley somewhere random
 				expand (UPSIZE,1,x,y);
 			else if(image[i][j] == 0)	//these pixels are filled
 				expand (UPSIZE,0,x,y);
-
 		}
 		wait10Msec(20);
 	}
@@ -267,19 +255,19 @@ void rotate(int speed, int degrees){
 
     if (degrees>0){
         nMotorEncoder[RMOTOR]=0; //zero right encoder
-        motor[RMOTOR]=SPEED;
-        motor[LMOTOR]=-SPEED;
+        motor[RMOTOR]=DRIVESPEED;
+        motor[LMOTOR]=-DRIVESPEED;
     }
     else{
         nMotorEncoder[LMOTOR]=0; //zero left encoder
-        motor[RMOTOR]=-SPEED;
-        motor[LMOTOR]=SPEED;
+        motor[RMOTOR]=-DRIVESPEED;
+        motor[LMOTOR]=DRIVESPEED;
     }
 
     neededCount=abs(degrees)*ROTATESCALE;
     actualCount=0;
 
-    while(actualCount<(neededCount-SPEED*EARLYSTOPFACTOR)){
+    while(actualCount<(neededCount-DRIVESPEED*EARLYSTOPFACTOR)){
         wait1Msec(5);
 
         if (degrees>0)
@@ -342,6 +330,7 @@ void touchSensor(int direction, int &spaceCount, int &enterCount, int &consecEnt
         BackUp();
 }
 
+
 void BackUp(){
     int i, neededLoops;
 
@@ -354,10 +343,11 @@ void BackUp(){
         PlayTone(TONE,30); //play 1100Hz tone for 30msecs
         wait10Msec(30); //drive backwards while waiting for tone to finish
     }
-
     motor[RMOTOR]=0;
     motor[LMOTOR]=0;
 }
+
+
 int lightSensor(int sound){
   int direction;
   int light; //current sensor light level
@@ -366,8 +356,6 @@ int lightSensor(int sound){
   motor[LMOTOR]=DRIVESPEED;
 
   while(true){
-
-
       light=SensorValue[LIGHT]; //get the new light sensor value
       if (light < COLOUR1){
           //Turn right
@@ -404,6 +392,6 @@ int lightSensor(int sound){
               }
       }
     
-}
+		}
 return direction;
 }
