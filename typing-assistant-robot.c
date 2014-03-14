@@ -322,7 +322,7 @@ void touchSensor(int direction, int &spaceCount, int &enterCount, int &consecEnt
             enterCount+=1;
             consecEnter++;
             }
-        }
+    }
         //Back away from the keyboard
         BackUp();
 }
