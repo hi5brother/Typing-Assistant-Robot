@@ -3,24 +3,28 @@
 //Touch Sensor
 
 /*
-Either Bumper: Record that a character has been input. Move away from the keyboard.
-Two Consecutive Enter Commands: Terminate program.
-Or two consecutive bumps or something
+Back up for 200 msecs while playing 1100Hz tone for 30 msecs. Then motors stop.
 */
 
-void BackUp(int speed, int duration){
+#define RMOTOR 1
+#define LMOTOR 3
+#define SPEED 25
+#define DURATION 2000
+#define TONE 1100
+
+void BackUp(){
     int i, neededLoops;
     
-    motor[1]=-SPEED;
-    motor[2]=-SPEED;
-    neededLoops=duration/500;
+    motor[RMOTOR]=-SPEED;
+    motor[LMOTOR]=-SPEED;
+    neededLoops=DURATION/500;
     
     for (i=0;i<neededLoops;i++){
         wait10MSec(20); //drive backwards for 200msecs
-        PlayTone(1100,30); //play 1100Hz tone for 30msecs
+        PlayTone(TONE,30); //play 1100Hz tone for 30msecs
         wait10MSec(30); //drive backwards while waiting for tone to finish
     }
     
-    motor[1]=0;
-    motor[2]=0;
+    motor[RMOTOR]=0;
+    motor[LMOTOR]=0;
 }
