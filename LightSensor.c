@@ -14,7 +14,7 @@ Colour 4 (Back Edge): If loud, back up then go right to colour 1. If soft, back 
 #define LIGHT 1
 #define SPEED 50
 
-int LightSensor(int sound){
+int lightSensor(int sound){
   int direction;
   int light; //current sensor light level
   
