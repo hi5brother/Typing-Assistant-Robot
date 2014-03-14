@@ -6,10 +6,13 @@ No main function because these functions are included into the run file
 
 */
 
+#define ROWS 7
+#define COLS 7
+
 #define MAXHEIGHT 64
 #define MAXWIDTH 100
 
-#define UPSIZE 4
+#define UPSIZE 4 //expands the pixel from 1 pixel to a square of 4x4 pixels
 
 #define LEFT 30 //horizontal screen position at left edge of image
 #define TOP 40 //vertical screen position at top edge of image
@@ -39,13 +42,7 @@ void displaySmiley{		//displays a smiley somewhere random
 	int i, j; //row and column
 	int x, y; //screen x and y coordinates
 	int a,b; //start coordinates of the smiley	
-	int rows, cols;
-	int upsize;
-	
-	rows=7;		//these widths and heights are roughly the dimension of the screen
-	cols=10;
-	upsize=4;	//expands the pixel from 1 pixel to a square of 4x4 pixels
-	
+
 	byte image[ROWS][COLS]=
 			{	{1,1,1,0,0,0,0,1,1,1},
 				{1,1,0,0,0,0,0,0,1,1},
@@ -56,20 +53,20 @@ void displaySmiley{		//displays a smiley somewhere random
 				{1,1,1,0,0,0,0,1,1,1},
 			};
 			
-	a=random(MAXWIDTH-(cols*upsize));	//places the smiley at a random spot
-	b=random(MAXHEIGHT-(rows*upsize))+(rows*upsize);
+	a=random(MAXWIDTH-(COLS*UPSIZE));	//places the smiley at a random spot
+	b=random(MAXHEIGHT-(ROWS*UPSIZE))+(ROWS*UPSIZE);
 	
-	for(i=0; i<=rows-1; i++)
+	for(i=0; i<=ROWS-1; i++)
 	{
-		for(j=0; j<=cols-1; j++)
+		for(j=0; j<=COLS-1; j++)
 		{
-			x = a+j*upsize; //set x screen position according to the column value
-			y = b-i*upsize; //set y screen position according to the row value
+			x = a+j*UPSIZE; //set x screen position according to the column value
+			y = b-i*UPSIZE; //set y screen position according to the row value
 			
 			if(image[i][j] == 1)	//these pixels are empty
-				expand (upsize,1,x,y);
+				expand (UPSIZE,1,x,y);
 			else if(image[i][j] == 0)	//these pixels are filled
-				expand (upsize,0,x,y);
+				expand (UPSIZE,0,x,y);
 			
 		}
 		wait10Msec(20);
