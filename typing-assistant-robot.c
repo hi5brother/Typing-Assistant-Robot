@@ -1,8 +1,14 @@
+//Daniel Kao and Christopher Ko
+//APSC 142: Typing Assistant Robot
+//March 2014
 
-/* This is a sample Program
-   Use File->Load C Prog to
-   load a different Program
-*/
+#include "sound-function.c"
+#include "on-screen-function.c"
+#include "TouchSensor.c"
+#include "LightSensor.c"
+#include "BackUp.c"
+#include "Rotate.c"
+#include "line-follow.c"
 
 #define RMOTOR 1
 #define LMOTOR 3
@@ -22,6 +28,7 @@
 
 task main()
 {
+    int sound,direction;
     int spaceCount, enterCount, consecEnter;
     //Turn on speed regulation for accurate tracking
     nMotorPIDSpeedCtrl[RMOTOR]=mtrSpeedReg;
@@ -37,7 +44,12 @@ task main()
     //Sound
     SensorType[MICROPHONE]=sensorSoundDBA;
 
+    sound=listen();
+    direction=lightSensor(sound);
+    touchSensor(direction,spaceCount,enterCount,consecEnter);
+    displayScreen(spaceCount,enterCount);
+    clearScreen;
+    displaySmiley;
     
-    nxtDisplayTextLine(3,"HI");
 }
 

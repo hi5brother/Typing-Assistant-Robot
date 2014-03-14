@@ -12,8 +12,6 @@ Rotate y degrees at x speed
 
 #define RMOTOR 1
 #define LMOTOR 3
-#define RBUMP 0
-#define LBUMP 3
 
 void rotate(int speed, int degrees){
     int neededCount, actualCount;

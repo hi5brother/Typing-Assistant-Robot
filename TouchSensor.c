@@ -14,7 +14,7 @@ Two Consecutive Enter Commands: Terminate program.
 #define SPEED 25
 
 //Pass the direction from LightSensor into TouchSensor and have it return spaceCount and enterCount values to be displayed on the screen
-void TouchSensor(int direction, int &spaceCount, int &enterCount, int &consecEnter){
+void touchSensor(int direction, int &spaceCount, int &enterCount, int &consecEnter){
     int spaceCount,enterCount;
     int leftBump, rightBump;
     int consecEnter=0;
