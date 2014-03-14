@@ -23,6 +23,8 @@ need to test this shit out
 
 #define MAX 10
 
+//YO ADD ME
+
 typedef int rangeArray [MAX+1]		//gives a range of +/- 5 light values around the target level
 void zigrotate (int speed, int degrees);
 void followLine(int direction, int &bump);
