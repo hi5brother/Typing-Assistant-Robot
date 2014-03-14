@@ -21,7 +21,7 @@ int LightSensor(int sound){
   motor[2]=SPEED;
   
   while(true){
-      level=SensorValue[1]; //get the new light sensor value
+      light=SensorValue[1]; //get the new light sensor value
       if (light < COLOUR1){
           //Turn right
           direction=0;
