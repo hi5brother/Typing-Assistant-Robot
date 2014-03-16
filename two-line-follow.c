@@ -16,30 +16,34 @@ after first occurrence, the robot will rotate by __ degrees each time it senses 
 
 #define LIGHT 2
 
+#define SPEED 20
+
 #define COLOUR1 25	//this is the colour of the line
 #define COLOUR2 50
 
-#define MAX 10
+#define MAX 11
 
 
 
-typedef int range[11];
+typedef int range[MAX];
 
-int zigrotate (int speed, int degrees, int lightTarget);
-void drive;
-void rotate(int speed, int degrees,int zigged);
+//int zigrotate (int speed, int degrees, int lightTarget);
+void drive(int lightTarget, range colourRange);
+void rotate(int speed, int degrees);
 int scanLight(int lightTarget,range ColourRange);
 void generateRange(int lightTarget, range colourRange);
 
 task main(){
-
+	int colours[11];
+	generateRange(25,colours);
+	drive(25,colours);
 
 }
 
 void generateRange(int lightTarget, range colourRange){
 	int i;
 	
-	for (i=0;i<=11;i++)
+	for (i=0;i<MAX;i++)
 	{
 		colourRange[i]=lightTarget-MAX/2+i;	//sets the colour range to +/- 5 of the target light
 	}
@@ -48,12 +52,13 @@ void generateRange(int lightTarget, range colourRange){
 int scanLight(int lightTarget,range colourRange){		//this will be used every second to scan if it is on a colour
 	int light;
 	int hit=0;
+	int i;
 	
 	SensorType[LIGHT]=sensorLightActive;
 	
 	light=SensorValue[LIGHT];
 	
-	for (i=0;i<=11;i++){
+	for (i=0;i<MAX;i++){
 		if (light==colourRange[i]){
 			hit=1;
 			break;
@@ -79,11 +84,11 @@ void rotate (int speed, int degrees){
         motor[LMOTOR]=SPEED;
     }
     
-    neededCount=abs(degrees)*ROTATIONSCALE;
+    neededCount=abs(degrees)*ROTATESCALE;
     actualCount=0;
     
     while(actualCount<(neededCount-SPEED*EARLYSTOPFACTOR)){
-        wait1MSec(5);
+        wait1Msec(5);
         
         if (degrees>0)
             actualCount=nMotorEncoder[RMOTOR];
@@ -109,22 +114,19 @@ void drive (int lightTarget, range colourRange){
 	while (scanLight(lightTarget, colourRange)==0){
 		motor[RMOTOR]=SPEED;
 		motor[LMOTOR]=SPEED;
+		wait1Msec(10);
 	}
 	if (scanLight(lightTarget,colourRange)==1){
 		zigged=zigged*(-1);
-		switch (zigged){
-			case 1:
-				rotate(20,20);
-				break;
-			case -1:
-				rotate(20,20);
-				break;
-		}
+		if(zigged==1)
+			rotate(20,20);				
+		else if (zigged==-1)
+			rotate(20,20);
 			
 	}
 }
 
-
+/*
 
 int zigrotate (int speed, int degrees, int lightTarget){
 	int neededCount, actualCount;
@@ -173,4 +175,4 @@ int zigrotate (int speed, int degrees, int lightTarget){
 	motor[RMOTOR]=SPEED;
 	motor[LMOTOR]=SPEED;
 	wait1Msec(100);
-}
+}*/
