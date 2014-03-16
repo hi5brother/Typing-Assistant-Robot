@@ -14,7 +14,7 @@ after first occurrence, the robot will rotate by __ degrees each time it senses 
 #define RMOTOR 1
 #define LMOTOR 2
 
-#define LIGHT 2
+#define LIGHT 1
 
 #define SPEED 20
 
@@ -30,19 +30,42 @@ typedef int range[MAX];
 //int zigrotate (int speed, int degrees, int lightTarget);
 void drive(int lightTarget, range colourRange);
 void rotate(int speed, int degrees);
-int scanLight(int lightTarget,range ColourRange);
+int scanLight(int lightTarget,range colourRange);
 void generateRange(int lightTarget, range colourRange);
 
 task main(){
 	int colours[11];
-	generateRange(25,colours);
-	drive(25,colours);
+	int zigged=1;
+	int lightTarget=50;
+	
+	SensorType[LIGHT]=sensorLightActive;
+	generateRange(COLOUR2,colours);
+	
+	
+	nMotorPIDSpeedCtrl[LMOTOR]=mtrSpeedReg;
+	nMotorPIDSpeedCtrl[RMOTOR]=mtrSpeedReg;
+	
+	rotate(20,20);
+	while (scanLight(lightTarget, colours)==0){
+		drive(COLOUR2,colours);
+	}
+	wait1Msec(100);
+	
+	if (scanLight(lightTarget,colours)==1){
+		zigged=zigged*(-1);
+		if(zigged==1)
+			rotate(20,20);
+		else if(zigged==-1)
+			rotate(20,-20);
+	}
+		
+
 
 }
 
 void generateRange(int lightTarget, range colourRange){
 	int i;
-	
+
 	for (i=0;i<MAX;i++)
 	{
 		colourRange[i]=lightTarget-MAX/2+i;	//sets the colour range to +/- 5 of the target light
@@ -53,11 +76,12 @@ int scanLight(int lightTarget,range colourRange){		//this will be used every sec
 	int light;
 	int hit=0;
 	int i;
-	
+
 	SensorType[LIGHT]=sensorLightActive;
-	
+
 	light=SensorValue[LIGHT];
-	
+	nxtDisplayTextLine(4,"Light: %d",light);
+
 	for (i=0;i<MAX;i++){
 		if (light==colourRange[i]){
 			hit=1;
@@ -103,28 +127,15 @@ void rotate (int speed, int degrees){
 }
 
 void drive (int lightTarget, range colourRange){
-	int i;
-	int zigged=1;
-	nMotorPIDSpeedCtrl[LMOTOR]=mtrSpeedReg;
-	nMotorPIDSpeedCtrl[RMOTOR]=mtrSpeedReg;
-	
+
+
 	motor[RMOTOR]=SPEED;
 	motor[LMOTOR]=SPEED;
+
 	
-	while (scanLight(lightTarget, colourRange)==0){
-		motor[RMOTOR]=SPEED;
-		motor[LMOTOR]=SPEED;
-		wait1Msec(10);
+
 	}
-	if (scanLight(lightTarget,colourRange)==1){
-		zigged=zigged*(-1);
-		if(zigged==1)
-			rotate(20,20);				
-		else if (zigged==-1)
-			rotate(20,20);
-			
-	}
-}
+
 
 /*
 
