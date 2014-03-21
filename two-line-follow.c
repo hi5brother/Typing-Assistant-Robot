@@ -1,5 +1,5 @@
 //Daniel Kao
-//Mar 14, 2014
+//Mar 20, 2014
 //Two-Line Follower
 
 /*
@@ -14,9 +14,11 @@ after first occurrence, the robot will rotate by __ degrees each time it senses 
 #define RMOTOR 1
 #define LMOTOR 2
 
-#define LIGHT 1
+#define LIGHT 0
 
-#define SPEED 100
+#define SPEED 5
+#define RSPEED 20
+#define DEGREE 50
 
 #define COLOUR1 25	//this is the colour of the line
 #define COLOUR2 50
@@ -28,68 +30,65 @@ after first occurrence, the robot will rotate by __ degrees each time it senses 
 typedef int range[MAX];
 
 //int zigrotate (int speed, int degrees, int lightTarget);
-void drive(int lightTarget, range colourRange);
+void drive();
 void rotate(int speed, int degrees);
-int scanLight(int lightTarget,range colourRange);
+int scanLight(range colourRange);
 void generateRange(int lightTarget, range colourRange);
 
 task main()
 {
-	int colours[11];
+	int colours[MAX];
 	int zigged=1;
-	int lightTarget=50;
-	
+	int lightTarget=35;
+
 	SensorType[LIGHT]=sensorLightActive;
-	generateRange(COLOUR1,colours);
-	
-	
+	generateRange(lightTarget,colours);
+
+
 	nMotorPIDSpeedCtrl[LMOTOR]=mtrSpeedReg;
 	nMotorPIDSpeedCtrl[RMOTOR]=mtrSpeedReg;
-	
-	rotate(20,20);
+
+	//rotate(20,20);
 	while (true)
 	{
-		while (scanLight(lightTarget, colours)==0)
-		{
-			drive(COLOUR2,colours);
-		}
-		
+		while (scanLight(colours)==0)	//when it does not sense the necessary colours
+			drive();
+
 		wait1Msec(100);
-		
-		if (scanLight(lightTarget,colours)==1)
+
+		if (scanLight(colours)==1) 	//when it does not sense the necessary colours
 		{
-			zigged=zigged*(-1);
+			wait1Msec(100);
+			zigged=zigged*(-1);	//switches the direction of the rotation each time it hits a colour
 			if(zigged==1)
-				rotate(20,40);
+				rotate(RSPEED,DEGREE);
 			else if(zigged==-1)
-				rotate(20,-40);
+				rotate(RSPEED,-DEGREE);
 		}
-		
 	}
-	
 }
 
 void generateRange(int lightTarget, range colourRange)
 {
 	int i;
-	
+
 	for (i=0;i<MAX;i++)
 	{
 		colourRange[i]=lightTarget-MAX/2+i;	//sets the colour range to +/- 5 of the target light
 	}
 }
 
-int scanLight(int lightTarget,range colourRange)
+int scanLight(range colourRange)
 {	//this will be used every second to scan if it is on a colour
 	int light;
 	int hit=0;
 	int i;
-	
+
 	SensorType[LIGHT]=sensorLightActive;
-	
+
 	light=SensorValue[LIGHT];
 	nxtDisplayTextLine(4,"Light: %d",light);
-	
+
 	for (i=0;i<MAX;i++)
 	{
 		if (light==colourRange[i])
@@ -107,7 +106,7 @@ int scanLight(int lightTarget,range colourRange)
 void rotate (int speed, int degrees)
 {
 	int neededCount, actualCount;
-	
+
 	if (degrees>0)
 	{
 		nMotorEncoder[RMOTOR]=0; //zero right encoder
@@ -120,85 +119,28 @@ void rotate (int speed, int degrees)
 		motor[RMOTOR]=-SPEED;
 		motor[LMOTOR]=SPEED;
 	}
-	
+
 	neededCount=abs(degrees)*ROTATESCALE;
 	actualCount=0;
-	
+
 	while(actualCount<(neededCount-SPEED*EARLYSTOPFACTOR))
 	{
 		wait1Msec(5);
-		
+
 		if (degrees>0)
 			actualCount=nMotorEncoder[RMOTOR];
 		else
 			actualCount=nMotorEncoder[LMOTOR];
 	}
-	
+
 	motor[RMOTOR]=0;
 	motor[LMOTOR]=0;
 	wait1Msec(200);
-	
+
 }
 
-void drive (int lightTarget, range colourRange)
+void drive ()
 {
-	
-	
 	motor[RMOTOR]=SPEED;
 	motor[LMOTOR]=SPEED;
-	
-	
-	
 }
-
-
-/*
-
-int zigrotate (int speed, int degrees, int lightTarget){
-	int neededCount, actualCount;
-	int colourRange[64];
-	int i;
-	int light;
-	int onTarget=1;
-	
-	SensorType[LIGHT]=sensorLightActive;
-	nMotorPIDSpeedCtrl[LMOTOR]=mtrSpeedReg;
-	nMotorPIDSpeedCtrl[RMOTOR]=mtrSpeedReg;
-	if (degrees>0)
-	{	//turns left
-		nMotorEncoder[RMOTOR]=0;
-		motor[RMOTOR]=SPEED;
-		motor[LMOTOR]=-SPEED;
-	}
-	else 
-	{	//turns right
-		nMotorEncoder[LMOTOR]=0;
-		motor[RMOTOR]=-SPEED;
-		motor[LMOTOR]=SPEED;
-	}
-	
-	neededCount=abs(degrees)*ROTATESCALE;
-	actualCount=0;
-	
-	while (actualCount<(neededCount-SPEED*EARLYSTOPFACTOR))
-	{
-		light=SensorValue[LIGHT];
-		
-		for (i=0;i<=MAX;i++)
-		{
-			if (light==colourRange[i])
-			 
-		wait1Msec(1);
-		
-		if (neededCount>0)
-			actualCount=nMotorEncoder[RMOTOR];        
-		else if (neededCount<0)
-			actualCount=nMotorEncoder[LMOTOR];
-		else 
-			break;
-	}
-	
-	motor[RMOTOR]=SPEED;
-	motor[LMOTOR]=SPEED;
-	wait1Msec(100);
-}*/
