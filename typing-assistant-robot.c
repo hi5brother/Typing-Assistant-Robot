@@ -1,6 +1,6 @@
 //Daniel Kao and Christopher Ko
 //APSC 142: Typing Assistant Robot
-//March 2014
+//March 20 2014
 
 /*
 This robot does something reall cool/useful/fun...
@@ -9,28 +9,40 @@ This robot does something reall cool/useful/fun...
 //Define robot sensor port values
 #define RMOTOR 1
 #define LMOTOR 2
+
 #define RBUMP 0
 #define LBUMP 2
-#define LIGHT 1
-#define MICROPHONE 3
-#define BULB 0
+
+#define LIGHT 0
+
+#define MICROPHONE 2
+
+#define BULB 3
 
 //Define light thresholds for the different boundaries
+
 #define COLOUR1 25
 #define COLOUR2 50
 #define COLOUR3 75
 #define COLOUR4 100
 
+#define GREEN 35
+#define RED 60
+#define BLUE 20
+#define YELLOW 30
+
 //Define speeds
-#define DRIVESPEED 50
-#define BACKSPEED 25
-#define ZIGSPEED 20
-#define ZIGZAG 10
-#define MAX 64
+#define DRIVESPEED 5
+#define RSPEED 5
+#define BACKSPEED 5
+#define DEGREE 50
 
 //Define rotation values for robot
 #define ROTATESCALE 2.06		//found from trial and error
 #define EARLYSTOPFACTOR 0.30		//stop earlier to account for inertia
+
+//For Colour Range
+#define MAX 11
 
 //Define smiley face parameters
 #define ROWS 7
@@ -51,128 +63,133 @@ This robot does something reall cool/useful/fun...
 #define TONE 1100
 
 
+typedef int range[MAX]; //used for colourRange (colours that it checks over)
+
 //Define function prototypes
 //typedef int rangeArray [MAX];		//gives a range of +/- 5 light values around the target level
-void zigrotate (int speed, int degrees);
-void followLine(int direction, int &bump);
+
+void sensorInitialize();
+//Screen Functions
 void displayScreen (int spaceCount, int enterCount);		//displays the number of spaces and enters that have been used
 void clearScreen();		//clears the screen on call
 void displaySmiley();		//displays a smiley somewhere random
 void expand (int size, int clear, int initX, int initY);		//expands the selected pixel to a square of lengths /size
+
+//Drive and Movement Functions
 void rotate(int speed, int degrees);
-int listen();
-void touchSensor(int direction, int &spaceCount, int &enterCount, int &consecEnter);
+void drive();
 void BackUp();
-int lightSensor(int sound);
 
+//Inputs for Bumper, Sound, Light
+void touchSensor(int direction, int &spaceCount, int &enterCount, int &consecEnter);
+int listen();
+int scanLight(range colourRange);
 
+void generateRange(int lightTarget, range colourRange);
 
 task main()
 {
-    int sound,direction;
-    int spaceCount, enterCount, consecEnter=0;
+		int lightTarget=35;
+		
+		range greenRange;	//left (towards space)
+	  range redRange;	//right (towards enter)
+	  range blueRange;	//top (towards keyboard)
+	  range yellowRange; //back (idk man, edge of the world)
+	  
+	  int position; //1 is left, 2 is right, 3 is top, 4 is bottom
+	  
+		int soundLevel;
+		int key; // space = 1, enter = 2
     
-    //Initialize Motors and Sensors
-    nMotorPIDSpeedCtrl[RMOTOR]=mtrSpeedReg;
+		sensorInitialize();
+		
+		generateRange(GREEN,greenRange);
+	  generateRange(RED,redRange);
+	  generateRange(BLUE,blueRange);
+	  generateRange(YELLOW,yellowRange);
+		
+    soundLevel=listen();
+    
+    if (soundLevel==1)
+    	key=1;
+   	else if(soundLevel==0)
+   		key=2;
+    nxtDisplayTextLine(2,"%d",key);
+    
+    while (scanLight(greenRange)!=0 || scanLight(redRange)!=0 || scanLight(blueRange)!=0||scanLight(yellowRange)!=0){
+    	drive();	//keeps on driving until it hits a colour
+  	}
+   	//finds the position of the robot depending on what colour it senses first
+    	
+  	if (scanLight(greenRange)==1)
+  		position=1;	//hit left
+  	else if (scanLight(redRange)==1)
+  		position=2;	//hit right
+  	else if (scanLight(blueRange)==1)
+  		position=3;	//hit top
+    else if (scanLight(yellowRange)==1)
+  		position=4; //hit bottom
+  	
+  	if (position==1 && key==1){
+  		//drive towards space
+  		nxtDisplayTextLine(1,"BIGCOCK");
+  		wait1Msec(100);
+  	}
+  	else if (position==1 && key==2){
+  		//turn around	
+  		rotate(RSPEED,180);
+  	}
+  	else if (position==2 && key==1){
+  		//turn around
+  	//nxtDisplayTextLine(1,"smallCOCK");
+  		//wait10Msec(100);
+  		rotate(RSPEED,180);
+  	}
+  	else if (position==2 && key==2){
+  		//drive towards enter
+  		nxtDisplayTextLine(1,"BIGCOCK");
+  		wait1Msec(100);
+
+  	}
+    else if (position==3 && key==1){
+  		//turn left
+    	rotate(RSPEED,-DEGREE);
+  	} 
+  	else if (position==3 && key==2){
+  		//turn right
+  		rotate(RSPEED,DEGREE);
+  	} 
+  	else if (position==4 && key==1){
+  		//turn right
+  		rotate(RSPEED,DEGREE);
+  	} 
+  	else if (position==4 && key==2){
+  		//turn left
+  		rotate(RSPEED,-DEGREE);
+  	} 
+  	
+	}
+
+void generateRange(int lightTarget, range colourRange)
+{
+	int i;
+
+	for (i=0;i<MAX;i++)
+	{
+		colourRange[i]=lightTarget-MAX/2+i;	//sets the colour range to +/- 5 of the target light
+	}
+}
+
+
+void sensorInitialize(){
+	 nMotorPIDSpeedCtrl[RMOTOR]=mtrSpeedReg;
     nMotorPIDSpeedCtrl[LMOTOR]=mtrSpeedReg;
     SensorType[RBUMP]=sensorTouch;
     SensorType[LBUMP]=sensorTouch;
     SensorType[LIGHT]=sensorLightActive;
-    SensorType[MICROPHONE]=sensorSoundDBA;
-
-    while(consecEnter!=2){
-    	sound=listen();
-   		nxtDisplayBigTextLine(4,"HI");
-    	direction=lightSensor(sound);
-    	touchSensor(direction,spaceCount,enterCount,consecEnter);
-    	displayScreen(spaceCount,enterCount);
-    	clearScreen();
-    	displaySmiley();
-  }
+    SensorType[MICROPHONE]=sensorSoundDBA;	
 }
 
-
-void followLine (int direction, int&bump){
-	int i;
-	int light;
-	int lightTarget;		//value of the colour that the bot is suppose to follow
-	int onTarget;		//1 or 0, depending on whether the bot is on or not
-	int zigged;
-	int colourRange[MAX];
-
-
-	if (direction==0)
-		lightTarget=COLOUR1;
-	else if (direction==1)
-		lightTarget=COLOUR2;
-
-	for (i=0;i<=10;i++){
-		colourRange[i]=lightTarget-10/2+i;	//sets the colour range to +/- 5 of the target light
-	}
-	SensorType[LIGHT]=sensorLightActive;
-	nMotorPIDSpeedCtrl[LMOTOR]=mtrSpeedReg;
-	nMotorPIDSpeedCtrl[RMOTOR]=mtrSpeedReg;
-
-	motor[RMOTOR]=ZIGSPEED;
-	motor[LMOTOR]=ZIGSPEED;
-
-	while (true){
-		light=SensorValue[LIGHT];
-
-		onTarget=0;		//each time through the while loop, it must check whether it is within the range
-		for (i=0;i<=MAX;i++){
-			if (light==colourRange[i])
-				onTarget=1;
-		}
-
-		if (onTarget==0){		//not on the target colour
-			if (zigged==1){	//zigged left last time
-				zigrotate(ZIGSPEED, ZIGZAG);	//zag right
-				zigged=0;
-			}
-			else if (zigged==-1){	//zigged right last time
-				zigrotate(ZIGSPEED,-ZIGZAG);	//zag left
-				zigged=1;
-			}
-		}
-		else if (onTarget==1){		//on the target colour
-			//drive forward
-		}
-
-		//touch sensor check
-}
-}
-
-
-void zigrotate(int speed, int degrees){
-	int neededCount, actualCount;
-
-	if (degrees>0){	//turns left
-		nMotorEncoder[RMOTOR]=0;
-		motor[RMOTOR]=ZIGSPEED;
-		motor[LMOTOR]=-ZIGSPEED;
-	}
-	else {	//turns right
-		nMotorEncoder[LMOTOR]=0;
-		motor[RMOTOR]=-ZIGSPEED;
-		motor[LMOTOR]=ZIGSPEED;
-	}
-
-	neededCount=abs(degrees)*ROTATESCALE;
-	actualCount=0;
-
-	while (actualCount<neededCount-(ZIGSPEED*EARLYSTOPFACTOR)){
-		wait1Msec(5);
-
-		if (degrees>0){
-			actualCount=nMotorEncoder[RMOTOR];
-		}
-        else
-            actualCount=nMotorEncoder[LMOTOR];
-        }
-    motor[RMOTOR]=0;
-    motor[LMOTOR]=0;
-}
 
 
 void displayScreen (int spaceCount, int enterCount){
@@ -221,61 +238,93 @@ void displaySmiley(){		//displays a smiley somewhere random
 		}
 		wait10Msec(20);
 	}
-	//wait10Msec(200);//delay end of program so we can image on the screen
 }
 
 void expand (int size, int clear, int initX, int initY)	//expands the selected pixel to a square of lengths /size
 {
 	int i;
 	int j;
-	if (clear==1)
-	{
-		for (i=0;i<size;i++)
-		{
+	if (clear==1){
+		for (i=0;i<size;i++){
 			for (j=0;j<size;j++)
 				nxtClearPixel(initX+i,initY-j);		//(initX,initY) is the top left pixel)
 		}
 	}
-	else if (clear==0)
-	{
-		for (i=0;i<size;i++)
-		{
+	else if (clear==0){
+		for (i=0;i<size;i++){
 			for (j=0;j<size;j++)
 				nxtSetPixel(initX+i,initY-j);
 		}
 	}
 }
 
+int scanLight(range colourRange)
+{	//this will be used every second to scan if it is on a colour
+	int light;
+	int hit=0;
+	int i;
 
-void rotate(int speed, int degrees){
-    int neededCount, actualCount;
+	SensorType[LIGHT]=sensorLightActive;
 
-    if (degrees>0){
-        nMotorEncoder[RMOTOR]=0; //zero right encoder
-        motor[RMOTOR]=DRIVESPEED;
-        motor[LMOTOR]=-DRIVESPEED;
-    }
-    else{
-        nMotorEncoder[LMOTOR]=0; //zero left encoder
-        motor[RMOTOR]=-DRIVESPEED;
-        motor[LMOTOR]=DRIVESPEED;
-    }
+	light=SensorValue[LIGHT];
+	nxtDisplayTextLine(4,"Light: %d",light);
 
-    neededCount=abs(degrees)*ROTATESCALE;
-    actualCount=0;
+	for (i=0;i<MAX;i++)
+	{
+		if (light==colourRange[i])
+		{
+			hit=1;
+			break;
+		}
+	}
+	if (hit==1)
+		return 1;		//returns 1 if it is on the colour
+	else if (hit==0)
+		return 0;
+	return 1;
+}
 
-    while(actualCount<(neededCount-DRIVESPEED*EARLYSTOPFACTOR)){
-        wait1Msec(5);
 
-        if (degrees>0)
-            actualCount=nMotorEncoder[RMOTOR];
-        else
-            actualCount=nMotorEncoder[LMOTOR];
-        }
+void drive ()
+{
+	motor[RMOTOR]=DRIVESPEED;
+	motor[LMOTOR]=DRIVESPEED;
+}
 
-    motor[RMOTOR]=0;
-    motor[LMOTOR]=0;
-    wait1Msec(200);
+void rotate (int speed, int degrees)
+{
+	int neededCount, actualCount;
+
+	if (degrees>0)
+	{
+		nMotorEncoder[RMOTOR]=0; //zero right encoder
+		motor[RMOTOR]=speed;
+		motor[LMOTOR]=-speed;
+	}
+	else
+	{
+		nMotorEncoder[LMOTOR]=0; //zero left encoder
+		motor[RMOTOR]=-speed;
+		motor[LMOTOR]=speed;
+	}
+
+	neededCount=abs(degrees)*ROTATESCALE;
+	actualCount=0;
+
+	while(actualCount<(neededCount-speed*EARLYSTOPFACTOR))
+	{
+		wait1Msec(5);
+
+		if (degrees>0)
+			actualCount=nMotorEncoder[RMOTOR];
+		else
+			actualCount=nMotorEncoder[LMOTOR];
+	}
+
+	motor[RMOTOR]=0;
+	motor[LMOTOR]=0;
+	wait1Msec(200);
+
 }
 
 
@@ -301,8 +350,8 @@ int listen()
 			sound= 0;
 			break;
 		}
-}
-return sound;
+	}
+	return sound;
 }
 
 
@@ -342,53 +391,4 @@ void BackUp(){
     }
     motor[RMOTOR]=0;
     motor[LMOTOR]=0;
-}
-
-
-int lightSensor(int sound){
-  int direction;
-  int light; //current sensor light level
-
-  motor[RMOTOR]=DRIVESPEED;
-  motor[LMOTOR]=DRIVESPEED;
-
-  while(true){
-      light=SensorValue[LIGHT]; //get the new light sensor value
-      if (light < COLOUR1){
-          //Turn right
-          direction=0;
-          break;
-          }
-      else if  (light > COLOUR1 && light < COLOUR2){
-          //Turn Left
-          direction=1;
-          break;
-          }
-      else if (light > COLOUR2 && light < COLOUR3){
-          if (sound==1){
-              //Backup a bit
-              BackUp();
-              //Turn Left
-              }
-          else if (sound==0){
-              //Backup a bit
-              BackUp();
-              //Turn Right
-              }
-          }
-      else if (light > COLOUR3 && light < COLOUR4){
-          if (sound==1){
-              //Backup a bit
-              BackUp();
-              //Turn Right
-              }
-          else if (sound==0){
-              //Backup a bit
-              BackUp();
-              //Turn Left
-              }
-      }
-    
-		}
-return direction;
 }
