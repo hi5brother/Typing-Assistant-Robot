@@ -7,13 +7,13 @@ This robot does something reall cool/useful/fun...
 */
 
 //Define robot sensor port values
-#define RMOTOR 1
-#define LMOTOR 2
+#define RMOTOR 2
+#define LMOTOR 1
 
 #define RBUMP 0
-#define LBUMP 2
+#define LBUMP 1
 
-#define LIGHT 0
+#define LIGHT 2
 
 #define MICROPHONE 2
 
@@ -26,7 +26,7 @@ This robot does something reall cool/useful/fun...
 #define COLOUR3 75
 #define COLOUR4 100
 
-#define GREEN 35
+#define GREEN 40
 #define RED 60
 #define BLUE 20
 #define YELLOW 30
@@ -35,7 +35,7 @@ This robot does something reall cool/useful/fun...
 #define DRIVESPEED 5
 #define RSPEED 5
 #define BACKSPEED 5
-#define DEGREE 50
+#define DEGREE 100
 
 //Define rotation values for robot
 #define ROTATESCALE 2.06		//found from trial and error
@@ -55,8 +55,8 @@ This robot does something reall cool/useful/fun...
 #define TOP 40		//vertical screen position at top edge of image
 
 //Define sound parameters
-#define SOUNDTHRESH 65
-#define AMBIENT 25
+#define SOUNDTHRESH 25
+#define AMBIENT 15
 
 //Define back up noises
 #define DURATION 2000
@@ -75,107 +75,232 @@ void clearScreen();		//clears the screen on call
 void displaySmiley();		//displays a smiley somewhere random
 void expand (int size, int clear, int initX, int initY);		//expands the selected pixel to a square of lengths /size
 
-//Drive and Movement Functions
+//Basic Drive and Movement Functions
 void rotate(int speed, int degrees);
 void drive();
 void BackUp();
 
 //Inputs for Bumper, Sound, Light
-void touchSensor(int direction, int &spaceCount, int &enterCount, int &consecEnter);
+int touchSensor(int direction, int &spaceCount, int &enterCount, int &consecEnter);
 int listen();
 int scanLight(range colourRange);
 
+//Procedure Functions
 void generateRange(int lightTarget, range colourRange);
+int findKey(int key);
 
 task main()
 {
-		int lightTarget=35;
+		//int lightTarget=35;
+		int key=0; // space = 1, enter = 2, indicates whether it has approached the right target, it is 0 when it is still looking
+		int keyTarget=0; // space = 1, enter = 2, indicates which thing it is targetting
+	  
+		int zigged=1;//determines which direction it ziggs next
 		
+		//sensor values
+		int soundLevel;
+		int light;
+		
+		//counter variables that will be showed onscreen
+		int bumperHit=0;
+		int spaceCount=0;
+		int enterCount=0;
+		int consecEnter=0;
+		
+		//range that the scanLight function will check
 		range greenRange;	//left (towards space)
 	  range redRange;	//right (towards enter)
 	  range blueRange;	//top (towards keyboard)
 	  range yellowRange; //back (idk man, edge of the world)
-	  
-	  int position; //1 is left, 2 is right, 3 is top, 4 is bottom
-	  
-		int soundLevel;
-		int key; // space = 1, enter = 2
-    
-		sensorInitialize();
-		
+	  range targetRange;
+		//generates the range
 		generateRange(GREEN,greenRange);
 	  generateRange(RED,redRange);
 	  generateRange(BLUE,blueRange);
 	  generateRange(YELLOW,yellowRange);
+	  
+	  //START OF PROCEDURES~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		soundLevel=listen();		//waits for the command (soft vs loud)
+  
+		if (soundLevel==1){
+			keyTarget=1;
+			generateRange(GREEN,targetRange);
+		}
+		else if(soundLevel==0){
+			keyTarget=2;
+			generateRange(RED,targetRange);
+		}
 		
-    soundLevel=listen();
-    
-    if (soundLevel==1)
-    	key=1;
-   	else if(soundLevel==0)
-   		key=2;
-    nxtDisplayTextLine(2,"%d",key);
-    
-    while (scanLight(greenRange)!=0 || scanLight(redRange)!=0 || scanLight(blueRange)!=0||scanLight(yellowRange)!=0){
-    	drive();	//keeps on driving until it hits a colour
-  	}
-   	//finds the position of the robot depending on what colour it senses first
-    	
-  	if (scanLight(greenRange)==1)
-  		position=1;	//hit left
-  	else if (scanLight(redRange)==1)
-  		position=2;	//hit right
-  	else if (scanLight(blueRange)==1)
-  		position=3;	//hit top
-    else if (scanLight(yellowRange)==1)
-  		position=4; //hit bottom
-  	
-  	if (position==1 && key==1){
-  		//drive towards space
-  		nxtDisplayTextLine(1,"BIGCOCK");
-  		wait1Msec(100);
-  	}
-  	else if (position==1 && key==2){
-  		//turn around	
-  		rotate(RSPEED,180);
-  	}
-  	else if (position==2 && key==1){
-  		//turn around
-  	//nxtDisplayTextLine(1,"smallCOCK");
-  		//wait10Msec(100);
-  		rotate(RSPEED,180);
-  	}
-  	else if (position==2 && key==2){
-  		//drive towards enter
-  		nxtDisplayTextLine(1,"BIGCOCK");
-  		wait1Msec(100);
+		//HARDCODE~~~~~~~~~~~~~~~~~
+		keyTarget=1;
+		
+		//~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		nxtDisplayTextLine(3,"KEY:%d",keyTarget);
+		//MOVEMENT TOWARDS TARGET~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		while (key==0){
+			key=findKey(keyTarget);	//keeps on driving until it finds the intended colour
+			wait10Msec(100);
+			light=SensorValue[LIGHT];
+		}
+		clearScreen();
+		nxtDisplayBigTextLine(2,"Found it");
+		
+		//ensures the robot drives past the first line 
+		drive();
+		wait1Msec(1000);
+		
+		//the robot finds the second line and then rotates
+		while (scanLight(targetRange)==0)	{
+			drive();
+			nxtDisplayBigTextLine(2,"ABOUT2ROTATE");
+		}
+		
+		//different rotation cases based on whether it is going towards space or enter
+		if (key==1){
+			zigged=-1;	//first rotate will be to the right (rotate towards space)
+			generateRange(GREEN,targetRange);
+			rotate(DRIVESPEED,90*zigged);
+		}
+			
+		else if (key==2){
+			zigged=1;	//first rotate will be to the left (rotate towards enter)
+			generateRange(RED,targetRange);
+			rotate(DRIVESPEED,90*zigged);
+		}
+		
+		//MOVEMENT WHILE TRACKING TOWARDS KEYBOARD~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+		while (true) {
+			clearScreen();
+			nxtDisplayBigTextLine(2,"ROTATING");
+			
+			//check whether the light is seen or bumper is hit
+			while (scanLight(targetRange)==0 && bumperHit==0){	//driving straight when not rotating
+				drive();
+				bumperHit=touchSensor(keyTarget,spaceCount,enterCount,consecEnter);
+			}
+			
+			//alternating zig zag movement
+			if (scanLight(targetRange)==1){ 	//when it does not sense the necessary colours
+				wait1Msec(100);
+				zigged=zigged*(-1);	//switches the direction of the rotation each time it hits a colour
+			
+				if(zigged==1)
+					rotate(RSPEED,DEGREE);
+				else if(zigged==-1)
+					rotate(RSPEED,-DEGREE);
+			}
+			
+			//Procedure when bumper is hit
+			if (bumperHit==1){
+				clearScreen();
+				nxtDisplayTextLine(1,"BUMPER HIT");
+				BackUp();
+				wait1Msec(1000);
+				break;
+			}
+		
+		}
 
-  	}
-    else if (position==3 && key==1){
-  		//turn left
-    	rotate(RSPEED,-DEGREE);
-  	} 
-  	else if (position==3 && key==2){
-  		//turn right
-  		rotate(RSPEED,DEGREE);
-  	} 
-  	else if (position==4 && key==1){
-  		//turn right
-  		rotate(RSPEED,DEGREE);
-  	} 
-  	else if (position==4 && key==2){
-  		//turn left
-  		rotate(RSPEED,-DEGREE);
-  	} 
-  	
+}
+
+
+int findKey(int key){	//
+
+	int position; //1 is left, 2 is right, 3 is top, 4 is bottom
+
+	range greenRange;	//left (towards space)
+  range redRange;	//right (towards enter)
+  range blueRange;	//top (towards keyboard)
+  range yellowRange; //back (idk man, edge of the world)
+  
+	generateRange(GREEN,greenRange);
+  generateRange(RED,redRange);
+  generateRange(BLUE,blueRange);
+  generateRange(YELLOW,yellowRange);
+  
+  while (scanLight(greenRange)!=0 || scanLight(redRange)!=0 || scanLight(blueRange)!=0||scanLight(yellowRange)!=0){
+    	drive();	//keeps on driving until it hits a colour
 	}
+	
+ 	//finds the position of the robot depending on what colour it senses first
+	if (scanLight(greenRange)==1)
+		position=1;	//hit left barrier
+	else if (scanLight(redRange)==1)
+		position=2;	//hit right barrier
+	else if (scanLight(blueRange)==1)
+		position=3;	//hit top barrier
+  else if (scanLight(yellowRange)==1)
+		position=4; //hit bottom barrier
+
+	//finds what to do	
+	if (position==1 && key==1){
+		//drive towards space
+		//wait1Msec(100);
+		return 1;
+	}
+	else if (position==1 && key==2){
+		//turn around	
+		clearScreen();
+		nxtDisplayBigTextLine(1,"CANT FIND IT");
+		
+		rotate(RSPEED,180);
+		
+		return 0;
+	}
+	else if (position==2 && key==1){
+		//turn around
+		//wait10Msec(100);
+		clearScreen();
+		nxtDisplayBigTextLine(1,"CANT FIND IT");
+		
+		rotate(RSPEED,180);
+		return 0;
+	}
+	else if (position==2 && key==2){
+		//drive towards enter
+		//wait1Msec(100);
+		return 2;
+
+	}
+  else if (position==3 && key==1){
+		//turn left
+  	clearScreen();
+		nxtDisplayBigTextLine(1,"CANT FIND IT");
+		
+  	rotate(RSPEED,-DEGREE);
+  	return 0;
+	} 
+	else if (position==3 && key==2){
+		//turn right
+		clearScreen();
+		nxtDisplayBigTextLine(1,"CANT FIND IT");
+		
+		rotate(RSPEED,DEGREE);
+		return 0;
+	} 
+	else if (position==4 && key==1){
+		//turn right
+		clearScreen();
+		nxtDisplayBigTextLine(1,"CANT FIND IT");
+		
+		rotate(RSPEED,DEGREE);
+		return 0;
+	} 
+	else if (position==4 && key==2){
+		//turn left
+		clearScreen();
+		nxtDisplayBigTextLine(1,"CANT FIND IT");
+		
+		rotate(RSPEED,-DEGREE);
+		return 0;
+	} 
+}
 
 void generateRange(int lightTarget, range colourRange)
 {
 	int i;
 
-	for (i=0;i<MAX;i++)
-	{
+	for (i=0;i<MAX;i++){
 		colourRange[i]=lightTarget-MAX/2+i;	//sets the colour range to +/- 5 of the target light
 	}
 }
@@ -224,10 +349,8 @@ void displaySmiley(){		//displays a smiley somewhere random
 	a=random(MAXWIDTH-(COLS*UPSIZE));	//places the smiley at a random spot
 	b=random(MAXHEIGHT-(ROWS*UPSIZE))+(ROWS*UPSIZE);
 
-	for(i=0; i<=ROWS-1; i++)
-	{
-		for(j=0; j<=COLS-1; j++)
-		{
+	for(i=0; i<=ROWS-1; i++){
+		for(j=0; j<=COLS-1; j++){
 			x = a+j*UPSIZE; //set x screen position according to the column value
 			y = b-i*UPSIZE; //set y screen position according to the row value
 
@@ -269,10 +392,8 @@ int scanLight(range colourRange)
 	light=SensorValue[LIGHT];
 	nxtDisplayTextLine(4,"Light: %d",light);
 
-	for (i=0;i<MAX;i++)
-	{
-		if (light==colourRange[i])
-		{
+	for (i=0;i<MAX;i++){
+		if (light==colourRange[i]){
 			hit=1;
 			break;
 		}
@@ -285,24 +406,20 @@ int scanLight(range colourRange)
 }
 
 
-void drive ()
-{
+void drive (){
 	motor[RMOTOR]=DRIVESPEED;
 	motor[LMOTOR]=DRIVESPEED;
 }
 
-void rotate (int speed, int degrees)
-{
+void rotate (int speed, int degrees){
 	int neededCount, actualCount;
 
-	if (degrees>0)
-	{
+	if (degrees>0){
 		nMotorEncoder[RMOTOR]=0; //zero right encoder
 		motor[RMOTOR]=speed;
 		motor[LMOTOR]=-speed;
 	}
-	else
-	{
+	else{
 		nMotorEncoder[LMOTOR]=0; //zero left encoder
 		motor[RMOTOR]=-speed;
 		motor[LMOTOR]=speed;
@@ -345,7 +462,7 @@ int listen()
 		if (dBlevel>SOUNDTHRESH){	//returns a 1 if the sound is above 65 dB (SOUNDTHRESH)
 			sound =1;
 			break;
-			}
+		}
 		else if (dBlevel>AMBIENT){		//only returns something if sound is above the ambient room noise
 			sound= 0;
 			break;
@@ -355,27 +472,35 @@ int listen()
 }
 
 
-void touchSensor(int direction, int &spaceCount, int &enterCount, int &consecEnter){
-    int leftBump, rightBump;
-
-    //Initialize Sensors
-    leftBump=SensorValue[LBUMP];
-    rightBump=SensorValue[RBUMP];
-
-    if (leftBump==1 || rightBump==1){
-        if (direction==0){
-            spaceCount+=1;
-            consecEnter=0;
-            }
-        else if (direction==1){
-            enterCount+=1;
-            consecEnter++;
-            }
-    }
-        //Back away from the keyboard
-        BackUp();
+int touchSensor (int direction, int &spaceCount, int &enterCount, int &consecEnter){
+	int leftBump, rightBump;
+	
+	//for some reason, the left bump shows 183 when hit, and right shows 184 when hit
+	//its 1024 when not hit
+	
+ 	//Initialize Sensors
+  leftBump=SensorValue[LBUMP];
+  rightBump=SensorValue[RBUMP];
+	nxtDisplayTextLine(5,"LEFT %d",leftBump);
+	nxtDisplayTextLine(6,"RIGHT %d",rightBump);
+  
+  if (leftBump==183 || rightBump==184){
+  	nxtDisplayTextLine(2,"HIT");
+      if (direction==0){
+          spaceCount+=1;
+          consecEnter=0;
+         
+          }
+      else if (direction==1){
+          enterCount+=1;
+          consecEnter++;
+          
+          }
+  	return 1;	//when the sensor is hit, display 1
+  }
+  else 
+  	return 0;
 }
-
 
 void BackUp(){
     int i, neededLoops;
