@@ -8,6 +8,12 @@ Daniel
 
 LOG
 
+23/03/2014
+Daniel
+#added the bumper sensor function into the code
+#still need to put it in a huge loop
+
+
 21/03/2014
 Daniel
 #reworked main function call and added the new line following method
