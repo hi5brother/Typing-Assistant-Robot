@@ -1,9 +1,9 @@
 //Daniel Kao and Christopher Ko
 //APSC 142: Typing Assistant Robot
-//March 20 2014
+//March 27 2014
 
 /*
-This robot does something reall cool/useful/fun...
+This robot does something really cool/useful/fun...
 */
 
 //Define robot sensor port values
@@ -28,9 +28,9 @@ This robot does something reall cool/useful/fun...
 #define YELLOW 40
 
 //Define speeds
-#define DRIVESPEED 20
+#define DRIVESPEED 10
 #define RSPEED 5
-#define BACKSPEED 5
+#define BACKSPEED 10
 #define DEGREE 110
 
 //Define rotation values for robot
@@ -55,7 +55,7 @@ This robot does something reall cool/useful/fun...
 #define AMBIENT 15
 
 //Define back up noises
-#define DURATION 2000
+#define DURATION 4000
 #define TONE 1100
 
 
@@ -119,9 +119,9 @@ task main()
 	  //START OF PROCEDURES~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		while(consecEnter<2){
 		  displayScreen(spaceCount,enterCount,consecEnter);
-		  
+
 		  soundLevel=listen();		//waits for the command (soft vs loud)
-	  
+
 			if (soundLevel==1){
 				keyTarget=1;
 				generateRange(GREEN,targetRange);
@@ -130,10 +130,10 @@ task main()
 				keyTarget=2;
 				generateRange(RED,targetRange);
 			}
-	
+
 			//HARDCODE~~~~~~~~~~~~~~~~~
-			keyTarget=2;
-	
+			keyTarget=1;
+
 			//~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			nxtDisplayTextLine(3,"KEY:%d",keyTarget);
 			//MOVEMENT TOWARDS TARGET~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -144,71 +144,71 @@ task main()
 			}
 			clearScreen();
 			nxtDisplayBigTextLine(2,"Found it");
-	
+
 			//ensures the robot drives past the first line 
 			drive();
 			wait1Msec(1000);
-	
+
 			//the robot finds the second line and then rotates
 			while (scanLight(targetRange)==0)	{
 				drive();
 				//nxtDisplayBigTextLine(2,"ABOUT2ROTATE");
 			}
-	
+
 			//different rotation cases based on whether it is going towards space or enter
 			if (key==1){
 				zigged=-1;	//first rotate will be to the right (rotate towards space)
 				generateRange(GREEN,targetRange);
 				rotate(DRIVESPEED,90*zigged);
 			}
-	
+
 			else if (key==2){
 				zigged=1;	//first rotate will be to the left (rotate towards enter)
 				generateRange(RED,targetRange);
 				rotate(DRIVESPEED,90*zigged);
 			}
-	
+
 			//MOVEMENT WHILE TRACKING TOWARDS KEYBOARD~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			while (true) {
 				clearScreen();
 				//nxtDisplayBigTextLine(2,"ROTATING");
-	
+
 				//check whether the light is seen or bumper is hit
 				while (scanLight(targetRange)==0 && bumperHit==0){	//driving straight when not rotating
 					drive();
 					bumperHit=touchSensor(keyTarget,spaceCount,enterCount,consecEnter);
 				}
-	
+
 				//alternating zig zag movement
 				if (scanLight(targetRange)==1){ 	//when it does not sense the necessary colours
 					wait1Msec(100);
 					zigged=zigged*(-1);	//switches the direction of the rotation each time it hits a colour
-	
+
 					if(zigged==1)
 						rotate(RSPEED,DEGREE);
 					else if(zigged==-1)
 						rotate(RSPEED,-DEGREE);
 				}
-	
+
 				//Procedure when bumper is hit
 				if (bumperHit==1){
 						clearScreen();
 						nxtDisplayTextLine(1,"BUMPER HIT");
 						motor[RMOTOR]=0;
 			 			motor[LMOTOR]=0;
-						
+
 						displaySmiley();
-						
+
 						if(key==1)
 							BackUp(-90);
 						else if(key==2)
 							BackUp(90);
-						
+
 						wait1Msec(1000);
 						reset(bumperHit,key,keyTarget,zigged);
 						break;
 				}
-	
+
 			}
 	}
 
@@ -325,6 +325,7 @@ void sensorInitialize(){
     SensorType[LBUMP]=sensorTouch;
     SensorType[LIGHT]=sensorLightActive;
     SensorType[MICROPHONE]=sensorSoundDBA;	
+    wait10Msec(100);
 }
 
 
@@ -500,12 +501,12 @@ int touchSensor (int direction, int &spaceCount, int &enterCount, int &consecEnt
   
   if (leftBump==183 || rightBump==184){
   	nxtDisplayTextLine(2,"HIT");
-      if (direction==0){
+      if (direction==1){
           spaceCount+=1;
           consecEnter=0;
          
           }
-      else if (direction==1){
+      else if (direction==0){
           enterCount+=1;
           consecEnter++;
           
@@ -531,7 +532,7 @@ void BackUp(int direction){
     
     rotate(BACKSPEED,direction);
     drive();
-    wait1Msec(2000); //change this depending on where the placement of the tape is (time for it to reach somewhere in the centre of the box)
+    wait1Msec(DURATION); //change this depending on where the placement of the tape is (time for it to reach somewhere in the centre of the box)
     motor[RMOTOR]=0;
     motor[LMOTOR]=0;
    	rotate(BACKSPEED,-direction);
